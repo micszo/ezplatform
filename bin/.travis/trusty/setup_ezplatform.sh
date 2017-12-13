@@ -4,28 +4,22 @@
 # functional and acceptance (behat) tests.
 #
 # Example usage:
-# $ ./bin/.travis/trusty/setup_ezplatform.sh "${COMPOSE_FILE}" "${INSTALL_TYPE}" ["${DEPENDENCY_PACKAGE_DIR}"]
+# $ ./bin/.travis/trusty/setup_ezplatform.sh ["${DEPENDENCY_PACKAGE_DIR}"]
+#
+# Required environment variables:
+# - ${COMPOSE_FILE}           compose file(s) paths
 #
 # Arguments:
-# - ${COMPOSE_FILE}           compose file(s) paths
-# - ${INSTALL_TYPE}           eZ Platform install type ("clean")
 # - ${DEPENDENCY_PACKAGE_DIR} optional, directory containing existing eZ Platform dependency package
 
-COMPOSE_FILE=$1
-INSTALL_TYPE=$2
-DEPENDENCY_PACKAGE_DIR=$3
+DEPENDENCY_PACKAGE_DIR=$1
 
 # Determine eZ Platform Build dir as relative to current script path
 EZPLATFORM_BUILD_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../.." && pwd )"
 
 if [[ -z "${COMPOSE_FILE}" ]]; then
-    echo 'Argument 1 should contain path to compose file(s). None given.' >&2
+    echo 'Missing environment variable COMPOSE_FILE' >&2
     exit 1
-fi
-
-if [[ -z "${INSTALL_TYPE}" ]]; then
-    echo 'Argument 2 should contain eZ Platform install type. None given' >&2
-    exit 2
 fi
 
 if [[ -n "${DEPENDENCY_PACKAGE_DIR}" ]]; then
@@ -34,7 +28,7 @@ if [[ -n "${DEPENDENCY_PACKAGE_DIR}" ]]; then
 
     if [[ -z "${DEPENDENCY_PACKAGE_NAME}" ]]; then
         echo 'Missing composer package name of tested dependency' >&2
-        exit 3
+        exit 2
     fi
 fi
 
@@ -60,7 +54,7 @@ if [[ -n "${DEPENDENCY_PACKAGE_NAME}" ]]; then
     # check if dependency exists for current meta-package version
     if [[ ! -d "./vendor/${DEPENDENCY_PACKAGE_NAME}" ]]; then
         echo "Testing dependency failed: package ${DEPENDENCY_PACKAGE_NAME} does not exist" >&2
-        exit 4
+        exit 3
     fi
 
     echo "> Overwrite ./vendor/${DEPENDENCY_PACKAGE_NAME} with ${DEPENDENCY_PACKAGE_DIR}"
@@ -71,6 +65,6 @@ if [[ -n "${DEPENDENCY_PACKAGE_NAME}" ]]; then
 fi
 
 echo '> Install data'
-docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ${INSTALL_TYPE}"
+docker-compose exec --user www-data app sh -c "php /scripts/wait_for_db.php; php bin/console ezplatform:install ${INSTALL_EZ_INSTALL_TYPE}"
 
 echo '> Done, ready to run tests'
