@@ -113,5 +113,16 @@ if (isset($relationships['redissession'])) {
     }
 }
 
+if (isset($relationships['solr'])) {
+    foreach ($relationships['solr'] as $endpoint) {
+        if ($endpoint['scheme'] !== 'solr') {
+            continue;
+        }
+
+        $container->setParameter('search_engine', 'solr');
+        $container->setParameter('solr_dsn', sprintf('http://%s:%d/%s', $endpoint['host'], $endpoint['port'], 'solr'));
+    }
+}
+
 // Disable PHPStormPass
 $container->setParameter('ezdesign.phpstorm.enabled', false);
